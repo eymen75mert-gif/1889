@@ -1,7 +1,15 @@
+import os
+
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
-TOKEN = "MTU1NDEwMjc2OTEzMTA2MTMyOA.GMYsAL.I6E7dUcsIq-wE7BQR0bhc6ZAahvswXNuLu4RDo"
+load_dotenv()
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN .env dosyasında bulunamadı.")
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -33,20 +41,15 @@ async def durum(ctx, *, yeni_durum: str):
 
 @bot.event
 async def on_message(message):
-    # Botların mesajlarına tepki verme
     if message.author.bot:
         return
 
-    # Sunucudaki mesajlara ✅ ekle
     if message.guild is not None:
         try:
             await message.add_reaction("✅")
-        except discord.Forbidden:
-            pass
-        except discord.HTTPException:
+        except (discord.Forbidden, discord.HTTPException):
             pass
 
-    # Komutların çalışmasını sağla
     await bot.process_commands(message)
 
 
