@@ -28,6 +28,7 @@ async def on_ready():
     print(f"{bot.user} olarak giriş yapıldı.")
 
 
+# .durum 1881
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def durum(ctx, *, yeni_durum: str):
@@ -39,24 +40,48 @@ async def durum(ctx, *, yeni_durum: str):
     await ctx.send(f"Durum değiştirildi: **{yeni_durum}**")
 
 
+# Bir mesaja REPLY yapıldığında, reply verilen mesaja tik at
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    if message.guild is not None:
+    # Mesaj bir reply ise
+    if message.reference and message.reference.message_id:
         try:
-            await message.add_reaction("✅")
-        except (discord.Forbidden, discord.HTTPException):
+            replied_message = await message.channel.fetch_message(
+                message.reference.message_id
+            )
+
+            await replied_message.add_reaction("✅")
+
+        except (discord.NotFound, discord.Forbidden, discord.HTTPException):
             pass
 
     await bot.process_commands(message)
 
 
+# .tik komutu
+@bot.command()
+async def tik(ctx):
+    try:
+        async for message in ctx.channel.history(
+            limit=2,
+            before=ctx.message
+        ):
+            await message.add_reaction("✅")
+            break
+
+    except (discord.Forbidden, discord.HTTPException):
+        pass
+
+
 @durum.error
 async def durum_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
-        await ctx.send("Bu komutu kullanmak için yönetici olmalısın.")
+        await ctx.send(
+            "Bu komutu kullanmak için yönetici olmalısın."
+        )
 
 
 bot.run(TOKEN)
